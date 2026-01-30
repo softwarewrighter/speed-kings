@@ -1,10 +1,20 @@
 //! Provider trait and implementations for LLM inference APIs.
 
 mod cerebras;
+mod deepseek;
+mod fireworks;
+mod groq;
 mod local;
+mod openai_compatible;
+mod sambanova;
 
 pub use cerebras::CerebrasProvider;
+pub use deepseek::DeepSeekProvider;
+pub use fireworks::FireworksProvider;
+pub use groq::GroqProvider;
 pub use local::LocalProvider;
+pub use openai_compatible::OpenAICompatibleProvider;
+pub use sambanova::SambaNovaProvider;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -98,12 +108,46 @@ impl ProviderRegistry {
         };
 
         // Try to register each provider - failures are silent (provider not available)
+
+        // Cloud providers (require API keys)
         if let Ok(provider) = CerebrasProvider::from_env() {
             registry
                 .providers
                 .insert("cerebras".to_string(), Box::new(provider));
         }
 
+        if let Ok(provider) = GroqProvider::from_env() {
+            registry
+                .providers
+                .insert("groq".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = FireworksProvider::from_env() {
+            registry
+                .providers
+                .insert("fireworks".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = SambaNovaProvider::from_env() {
+            registry
+                .providers
+                .insert("sambanova".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = DeepSeekProvider::from_env() {
+            registry
+                .providers
+                .insert("deepseek".to_string(), Box::new(provider));
+        }
+
+        // OpenAI-compatible custom endpoint
+        if let Ok(provider) = OpenAICompatibleProvider::from_env() {
+            registry
+                .providers
+                .insert("openai-compatible".to_string(), Box::new(provider));
+        }
+
+        // Local provider (Ollama) - always try to register
         if let Ok(provider) = LocalProvider::detect() {
             registry
                 .providers
@@ -131,6 +175,11 @@ impl ProviderRegistry {
     /// Check if any providers are available
     pub fn is_empty(&self) -> bool {
         self.providers.is_empty()
+    }
+
+    /// Get count of registered providers
+    pub fn len(&self) -> usize {
+        self.providers.len()
     }
 }
 

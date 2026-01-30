@@ -55,6 +55,9 @@ async fn run_benchmark(
         eprintln!("Set one or more API keys:");
         eprintln!("  export CEREBRAS_API_KEY=...");
         eprintln!("  export GROQ_API_KEY=...");
+        eprintln!("  export FIREWORKS_API_KEY=...");
+        eprintln!("  export SAMBANOVA_API_KEY=...");
+        eprintln!("  export DEEPSEEK_API_KEY=...");
         eprintln!("\nOr start Ollama for local inference:");
         eprintln!("  ollama serve");
         std::process::exit(1);
@@ -151,10 +154,13 @@ fn list_providers() {
     if registry.is_empty() {
         println!("No providers configured.\n");
         println!("To enable providers, set environment variables:");
-        println!("  CEREBRAS_API_KEY    - Cerebras inference");
-        println!("  GROQ_API_KEY        - Groq inference");
-        println!("  FIREWORKS_API_KEY   - Fireworks inference");
-        println!("  OLLAMA_URL          - Local Ollama (default: http://localhost:11434)");
+        println!("  CEREBRAS_API_KEY       - Cerebras inference");
+        println!("  GROQ_API_KEY           - Groq inference");
+        println!("  FIREWORKS_API_KEY      - Fireworks inference");
+        println!("  SAMBANOVA_API_KEY      - SambaNova inference");
+        println!("  DEEPSEEK_API_KEY       - DeepSeek inference");
+        println!("  OPENAI_COMPATIBLE_URL  - Custom OpenAI-compatible endpoint");
+        println!("  OLLAMA_URL             - Local Ollama (default: http://localhost:11434)");
         return;
     }
 

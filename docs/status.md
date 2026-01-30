@@ -8,7 +8,7 @@
 |--------|--------|
 | **Project** | Speed Kings (inference-showdown) |
 | **Version** | 0.1.0-dev |
-| **Phase** | Phase 1: Core Foundation (Complete) |
+| **Phase** | Phase 2: Full Provider Support (Complete) |
 | **Last Updated** | 2026-01-29 |
 
 ## Current State
@@ -59,12 +59,12 @@ The project is in its initial setup phase. Basic Rust project structure exists w
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Groq Provider | Not Started | - |
-| SambaNova Provider | Not Started | - |
-| Fireworks Provider | Not Started | - |
-| DeepSeek Provider | Not Started | - |
-| OpenAI-Compatible | Not Started | - |
-| Pricing System | Not Started | - |
+| Groq Provider | Complete | Streaming SSE, 401 verified |
+| SambaNova Provider | Complete | Streaming SSE, 401 verified |
+| Fireworks Provider | Complete | Streaming SSE, URL verified |
+| DeepSeek Provider | Complete | Streaming SSE, 401 verified |
+| OpenAI-Compatible | Complete | Generic endpoint support |
+| Pricing System | Complete | All providers have pricing |
 
 ### Phase 3: Advanced Features
 
@@ -133,6 +133,14 @@ None currently. Ready to begin Phase 1 implementation.
   - Output formats: table, JSON, Markdown, CSV
   - Metrics: TTFT, throughput, latency, cost
   - 6 unit tests for metrics calculations
+- **Phase 2 Implementation Complete**:
+  - Added Groq provider (LPU inference)
+  - Added Fireworks provider (serverless)
+  - Added SambaNova provider (enterprise RDU)
+  - Added DeepSeek provider (cost-effective)
+  - Added OpenAI-compatible provider (custom endpoints)
+  - All API endpoints verified (401 unauthorized with test keys)
+  - 6 providers total: Cerebras, Groq, Fireworks, SambaNova, DeepSeek, Local
 
 ## Known Issues
 
