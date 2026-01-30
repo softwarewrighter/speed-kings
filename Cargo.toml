@@ -2,5 +2,54 @@
 name = "speed-kings"
 version = "0.1.0"
 edition = "2024"
+description = "LLM inference benchmarking tool - compare speed, latency, and cost across providers"
+license = "MIT"
+repository = "https://github.com/softwarewrighter/speed-kings"
+keywords = ["llm", "benchmark", "inference", "ai"]
+categories = ["command-line-utilities"]
 
 [dependencies]
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async traits
+async-trait = "0.1"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Output formatting
+comfy-table = "7"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Progress indication
+indicatif = "0.17"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Streaming response parsing
+futures = "0.3"
+tokio-stream = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+
+[[bin]]
+name = "speed-kings"
+path = "src/main.rs"

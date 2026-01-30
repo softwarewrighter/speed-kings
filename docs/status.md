@@ -8,7 +8,7 @@
 |--------|--------|
 | **Project** | Speed Kings (inference-showdown) |
 | **Version** | 0.1.0-dev |
-| **Phase** | Phase 1: Core Foundation |
+| **Phase** | Phase 1: Core Foundation (Complete) |
 | **Last Updated** | 2026-01-29 |
 
 ## Current State
@@ -47,13 +47,13 @@ The project is in its initial setup phase. Basic Rust project structure exists w
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Project Setup | In Progress | Basic structure exists |
-| CLI Framework | Not Started | Need clap setup |
-| Provider Trait | Not Started | Core abstraction |
-| Cerebras Provider | Not Started | First cloud provider |
-| Local Provider | Not Started | Ollama integration |
-| Benchmark Engine | Not Started | Core logic |
-| Terminal Output | Not Started | Table formatting |
+| Project Setup | Complete | Dependencies, module structure |
+| CLI Framework | Complete | clap with subcommands |
+| Provider Trait | Complete | InferenceProvider trait |
+| Cerebras Provider | Complete | Streaming SSE support |
+| Local Provider | Complete | Ollama integration |
+| Benchmark Engine | Complete | Sequential runner with metrics |
+| Terminal Output | Complete | Table, JSON, Markdown, CSV |
 
 ### Phase 2: Full Provider Support
 
@@ -125,6 +125,14 @@ None currently. Ready to begin Phase 1 implementation.
   - Budget-conscious defaults ($0.10-0.25/run)
   - Local model loading tracked separately with documentation
   - Rate limiting handled via provider upgrade documentation
+- **Phase 1 Implementation Complete**:
+  - CLI with benchmark, list, pricing subcommands
+  - InferenceProvider trait with Cerebras and Local (Ollama) providers
+  - BenchmarkRunner with sequential execution
+  - Cost estimation and confirmation prompt
+  - Output formats: table, JSON, Markdown, CSV
+  - Metrics: TTFT, throughput, latency, cost
+  - 6 unit tests for metrics calculations
 
 ## Known Issues
 
