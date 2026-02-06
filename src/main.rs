@@ -67,8 +67,13 @@ async fn run_benchmark(
         eprintln!("  export ZAI_API_KEY=...");
         eprintln!("  export MOONSHOT_API_KEY=...");
         eprintln!();
-        eprintln!("  # Aggregators");
+        eprintln!("  # Aggregators / Proxies");
         eprintln!("  export OPENROUTER_API_KEY=...");
+        eprintln!("  export LITELLM_URL=http://localhost:4000/v1/chat/completions");
+        eprintln!();
+        eprintln!("  # Local Ollama");
+        eprintln!("  export OLLAMA_URL=http://localhost:11434  # M3/default");
+        eprintln!("  export OLLAMA_RTX_URL=http://rtx-machine:11434  # RTX GPU");
         eprintln!("\nOr start Ollama for local inference:");
         eprintln!("  ollama serve");
         std::process::exit(1);
@@ -179,12 +184,19 @@ fn list_providers() {
         println!("  ZAI_API_KEY            - Z.ai (Zhipu) GLM inference");
         println!("  MOONSHOT_API_KEY       - Moonshot Kimi inference");
         println!();
-        println!("  # Aggregators");
+        println!("  # Aggregators / Proxies");
         println!("  OPENROUTER_API_KEY     - OpenRouter aggregator");
+        println!("  LITELLM_URL            - LiteLLM proxy (http://localhost:4000/v1/chat/completions)");
+        println!("  LITELLM_MODEL          - Model name in LiteLLM config");
         println!();
-        println!("  # Custom / Local");
+        println!("  # Custom endpoint");
         println!("  OPENAI_COMPATIBLE_URL  - Custom OpenAI-compatible endpoint");
-        println!("  OLLAMA_URL             - Local Ollama (default: http://localhost:11434)");
+        println!();
+        println!("  # Local Ollama (multiple instances)");
+        println!("  OLLAMA_URL             - Primary Ollama (default: http://localhost:11434)");
+        println!("  OLLAMA_MODEL           - Model for primary (default: llama3.1:8b)");
+        println!("  OLLAMA_RTX_URL         - Secondary RTX machine Ollama URL");
+        println!("  OLLAMA_RTX_MODEL       - Model for RTX (default: llama3.1:8b)");
         return;
     }
 

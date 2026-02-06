@@ -1,4 +1,8 @@
 //! Local inference provider (Ollama) implementation.
+//!
+//! Supports multiple Ollama instances for comparing different hardware:
+//! - `local` - Primary instance (OLLAMA_URL, default: localhost:11434)
+//! - `local-rtx` - Secondary instance for RTX GPU (OLLAMA_RTX_URL)
 
 use super::{InferenceProvider, InferenceRequest, InferenceResponse, ProviderError};
 use async_trait::async_trait;
@@ -7,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
 const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
-const DEFAULT_MODEL: &str = "llama3.2:3b";
+const DEFAULT_MODEL: &str = "llama3.1:8b";
 const TIMEOUT_SECS: u64 = 300; // Local inference can be slow
 
 /// Local inference provider using Ollama
@@ -15,6 +19,8 @@ pub struct LocalProvider {
     client: Client,
     base_url: String,
     model: String,
+    name: String,
+    display_name: String,
 }
 
 #[derive(Serialize)]
@@ -48,11 +54,13 @@ struct ModelInfo {
 }
 
 impl LocalProvider {
-    /// Detect and create a local Ollama provider
-    pub fn detect() -> Result<Self, ProviderError> {
-        let base_url =
-            std::env::var("OLLAMA_URL").unwrap_or_else(|_| DEFAULT_OLLAMA_URL.to_string());
-
+    /// Create a local Ollama provider with custom configuration
+    fn new(
+        name: &str,
+        display_name: &str,
+        base_url: String,
+        model: String,
+    ) -> Result<Self, ProviderError> {
         let client = Client::builder()
             .timeout(Duration::from_secs(TIMEOUT_SECS))
             .build()
@@ -61,8 +69,41 @@ impl LocalProvider {
         Ok(Self {
             client,
             base_url,
-            model: DEFAULT_MODEL.to_string(),
+            model,
+            name: name.to_string(),
+            display_name: display_name.to_string(),
         })
+    }
+
+    /// Detect and create the primary local Ollama provider (M3/default)
+    ///
+    /// Environment variables:
+    /// - OLLAMA_URL: Ollama server URL (default: http://localhost:11434)
+    /// - OLLAMA_MODEL: Model to use (default: llama3.1:8b)
+    pub fn detect() -> Result<Self, ProviderError> {
+        let base_url =
+            std::env::var("OLLAMA_URL").unwrap_or_else(|_| DEFAULT_OLLAMA_URL.to_string());
+        let model =
+            std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.to_string());
+
+        Self::new("local", "Local (Ollama)", base_url, model)
+    }
+
+    /// Detect and create the secondary RTX Ollama provider
+    ///
+    /// Environment variables:
+    /// - OLLAMA_RTX_URL: RTX machine Ollama URL (required)
+    /// - OLLAMA_RTX_MODEL: Model to use (default: llama3.1:8b)
+    pub fn detect_rtx() -> Result<Self, ProviderError> {
+        let base_url = std::env::var("OLLAMA_RTX_URL").map_err(|_| {
+            ProviderError::NotConfigured(
+                "OLLAMA_RTX_URL environment variable not set".to_string(),
+            )
+        })?;
+        let model =
+            std::env::var("OLLAMA_RTX_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.to_string());
+
+        Self::new("local-rtx", "Local RTX (Ollama)", base_url, model)
     }
 
     /// Check if Ollama is running
@@ -94,11 +135,11 @@ impl LocalProvider {
 #[async_trait]
 impl InferenceProvider for LocalProvider {
     fn name(&self) -> &str {
-        "local"
+        &self.name
     }
 
     fn display_name(&self) -> &str {
-        "Local (Ollama)"
+        &self.display_name
     }
 
     async fn is_available(&self) -> bool {

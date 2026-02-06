@@ -4,6 +4,7 @@ mod cerebras;
 mod deepseek;
 mod fireworks;
 mod groq;
+mod litellm;
 mod local;
 mod moonshot;
 mod openai_compatible;
@@ -16,6 +17,7 @@ pub use cerebras::CerebrasProvider;
 pub use deepseek::DeepSeekProvider;
 pub use fireworks::FireworksProvider;
 pub use groq::GroqProvider;
+pub use litellm::LiteLLMProvider;
 pub use local::LocalProvider;
 pub use moonshot::MoonshotProvider;
 pub use openai_compatible::OpenAICompatibleProvider;
@@ -173,6 +175,13 @@ impl ProviderRegistry {
                 .insert("openrouter".to_string(), Box::new(provider));
         }
 
+        // LiteLLM proxy (unified interface)
+        if let Ok(provider) = LiteLLMProvider::from_env() {
+            registry
+                .providers
+                .insert("litellm".to_string(), Box::new(provider));
+        }
+
         // OpenAI-compatible custom endpoint
         if let Ok(provider) = OpenAICompatibleProvider::from_env() {
             registry
@@ -180,11 +189,18 @@ impl ProviderRegistry {
                 .insert("openai-compatible".to_string(), Box::new(provider));
         }
 
-        // Local provider (Ollama) - always try to register
+        // Local provider (Ollama) - primary instance (M3/default)
         if let Ok(provider) = LocalProvider::detect() {
             registry
                 .providers
                 .insert("local".to_string(), Box::new(provider));
+        }
+
+        // Local provider (Ollama) - secondary RTX instance
+        if let Ok(provider) = LocalProvider::detect_rtx() {
+            registry
+                .providers
+                .insert("local-rtx".to_string(), Box::new(provider));
         }
 
         registry
