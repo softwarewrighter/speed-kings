@@ -5,16 +5,24 @@ mod deepseek;
 mod fireworks;
 mod groq;
 mod local;
+mod moonshot;
 mod openai_compatible;
+mod openrouter;
 mod sambanova;
+mod together;
+mod zai;
 
 pub use cerebras::CerebrasProvider;
 pub use deepseek::DeepSeekProvider;
 pub use fireworks::FireworksProvider;
 pub use groq::GroqProvider;
 pub use local::LocalProvider;
+pub use moonshot::MoonshotProvider;
 pub use openai_compatible::OpenAICompatibleProvider;
+pub use openrouter::OpenRouterProvider;
 pub use sambanova::SambaNovaProvider;
+pub use together::TogetherProvider;
+pub use zai::ZaiProvider;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -107,9 +115,7 @@ impl ProviderRegistry {
             providers: HashMap::new(),
         };
 
-        // Try to register each provider - failures are silent (provider not available)
-
-        // Cloud providers (require API keys)
+        // Specialized AI chip providers
         if let Ok(provider) = CerebrasProvider::from_env() {
             registry
                 .providers
@@ -122,22 +128,49 @@ impl ProviderRegistry {
                 .insert("groq".to_string(), Box::new(provider));
         }
 
-        if let Ok(provider) = FireworksProvider::from_env() {
-            registry
-                .providers
-                .insert("fireworks".to_string(), Box::new(provider));
-        }
-
         if let Ok(provider) = SambaNovaProvider::from_env() {
             registry
                 .providers
                 .insert("sambanova".to_string(), Box::new(provider));
         }
 
+        // NVIDIA GPU cloud providers
+        if let Ok(provider) = FireworksProvider::from_env() {
+            registry
+                .providers
+                .insert("fireworks".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = TogetherProvider::from_env() {
+            registry
+                .providers
+                .insert("together".to_string(), Box::new(provider));
+        }
+
+        // Chinese AI providers
         if let Ok(provider) = DeepSeekProvider::from_env() {
             registry
                 .providers
                 .insert("deepseek".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = ZaiProvider::from_env() {
+            registry
+                .providers
+                .insert("zai".to_string(), Box::new(provider));
+        }
+
+        if let Ok(provider) = MoonshotProvider::from_env() {
+            registry
+                .providers
+                .insert("moonshot".to_string(), Box::new(provider));
+        }
+
+        // Aggregators
+        if let Ok(provider) = OpenRouterProvider::from_env() {
+            registry
+                .providers
+                .insert("openrouter".to_string(), Box::new(provider));
         }
 
         // OpenAI-compatible custom endpoint

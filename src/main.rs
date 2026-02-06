@@ -53,11 +53,22 @@ async fn run_benchmark(
     if registry.is_empty() {
         eprintln!("No providers available.\n");
         eprintln!("Set one or more API keys:");
+        eprintln!("  # Specialized AI chips");
         eprintln!("  export CEREBRAS_API_KEY=...");
         eprintln!("  export GROQ_API_KEY=...");
-        eprintln!("  export FIREWORKS_API_KEY=...");
         eprintln!("  export SAMBANOVA_API_KEY=...");
+        eprintln!();
+        eprintln!("  # NVIDIA GPU clouds");
+        eprintln!("  export FIREWORKS_API_KEY=...");
+        eprintln!("  export TOGETHER_API_KEY=...");
+        eprintln!();
+        eprintln!("  # Native model providers");
         eprintln!("  export DEEPSEEK_API_KEY=...");
+        eprintln!("  export ZAI_API_KEY=...");
+        eprintln!("  export MOONSHOT_API_KEY=...");
+        eprintln!();
+        eprintln!("  # Aggregators");
+        eprintln!("  export OPENROUTER_API_KEY=...");
         eprintln!("\nOr start Ollama for local inference:");
         eprintln!("  ollama serve");
         std::process::exit(1);
@@ -153,12 +164,25 @@ fn list_providers() {
 
     if registry.is_empty() {
         println!("No providers configured.\n");
-        println!("To enable providers, set environment variables:");
-        println!("  CEREBRAS_API_KEY       - Cerebras inference");
-        println!("  GROQ_API_KEY           - Groq inference");
+        println!("To enable providers, set environment variables:\n");
+        println!("  # Specialized AI chips (fastest)");
+        println!("  CEREBRAS_API_KEY       - Cerebras WSE inference");
+        println!("  GROQ_API_KEY           - Groq LPU inference");
+        println!("  SAMBANOVA_API_KEY      - SambaNova RDU inference");
+        println!();
+        println!("  # NVIDIA GPU clouds");
         println!("  FIREWORKS_API_KEY      - Fireworks inference");
-        println!("  SAMBANOVA_API_KEY      - SambaNova inference");
+        println!("  TOGETHER_API_KEY       - Together AI inference");
+        println!();
+        println!("  # Native model providers");
         println!("  DEEPSEEK_API_KEY       - DeepSeek inference");
+        println!("  ZAI_API_KEY            - Z.ai (Zhipu) GLM inference");
+        println!("  MOONSHOT_API_KEY       - Moonshot Kimi inference");
+        println!();
+        println!("  # Aggregators");
+        println!("  OPENROUTER_API_KEY     - OpenRouter aggregator");
+        println!();
+        println!("  # Custom / Local");
         println!("  OPENAI_COMPATIBLE_URL  - Custom OpenAI-compatible endpoint");
         println!("  OLLAMA_URL             - Local Ollama (default: http://localhost:11434)");
         return;

@@ -1,360 +1,298 @@
 # Implementation Plan
 
-> Phased implementation plan for Speed Kings.
+> Multi-phase 2-way comparison benchmark strategy for Speed Kings.
 
 ## Overview
 
-This document outlines the implementation phases, priorities, and task breakdowns for building the Speed Kings inference benchmarking tool.
+This plan organizes benchmarks as **pairwise comparisons** - each phase compares exactly 2 providers using the **same model**. This isolates the infrastructure difference and allows us to infer patterns across many comparisons.
+
+## Hardware & Infrastructure Types
+
+| Type | Provider | Technology | Speed Class |
+|------|----------|------------|-------------|
+| **WSE** | Cerebras | Wafer-Scale Engine | Ultra-fast (~1800 tok/s) |
+| **LPU** | Groq | Language Processing Unit | Very fast (~750 tok/s) |
+| **RDU** | SambaNova | Reconfigurable Dataflow Unit | Fast |
+| **GPU Cloud** | Fireworks, Together, OpenRouter | NVIDIA GPUs | Moderate (~400 tok/s) |
+| **Apple Silicon** | Local (Ollama M3 Pro) | Neural Engine + CPU | Slow (~50 tok/s) |
+| **Consumer GPU** | Local (Ollama RTX 5060) | NVIDIA CUDA | Moderate (~100 tok/s) |
+| **Native** | DeepSeek, Z.ai, Moonshot | Proprietary | Varies |
+
+## Model Availability Matrix
+
+### Llama 3.1 8B (Small Model)
+
+| Provider | Model ID | Available |
+|----------|----------|-----------|
+| Cerebras | `llama3.1-8b` | Yes |
+| Groq | `llama-3.1-8b-instant` | Yes |
+| Fireworks | `accounts/fireworks/models/llama-v3p1-8b-instruct` | Yes |
+| Together | `meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo` | Yes |
+| OpenRouter | `meta-llama/llama-3.1-8b-instruct` | Yes |
+| Local (Ollama) | `llama3.1:8b` | Yes |
 
-## Implementation Phases
+### Llama 3.1/3.3 70B (Large Model)
 
-### Phase 1: Core Foundation
+| Provider | Model ID | Available |
+|----------|----------|-----------|
+| Cerebras | `llama-3.3-70b` | Yes |
+| Groq | `llama-3.3-70b-versatile` | Yes |
+| SambaNova | `Meta-Llama-3.1-70B-Instruct` | Yes |
+| Fireworks | `accounts/fireworks/models/llama-v3p1-70b-instruct` | Yes |
+| Together | `meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo` | Yes |
 
-**Goal**: Minimal viable benchmarking with 2 providers
+### GLM-4.7 (Z.ai Model)
 
-**Tasks**:
+| Provider | Model ID | Available |
+|----------|----------|-----------|
+| Cerebras | `zai-glm-4.7` | Yes |
+| Z.ai | `glm-4.7` | Yes (native) |
+| Fireworks | `glm-4.7` | TBD |
 
-1. **Project Setup**
-   - [x] Initialize Rust project with Cargo.toml
-   - [ ] Add core dependencies (clap, tokio, reqwest, serde)
-   - [ ] Setup module structure
-   - [ ] Configure CI/CD (GitHub Actions)
+### DeepSeek-V3
 
-2. **CLI Framework**
-   - [ ] Implement argument parsing with clap
-   - [ ] Add benchmark subcommand
-   - [ ] Add list subcommand
-   - [ ] Implement --help with examples
-
-3. **Provider Trait**
-   - [ ] Define InferenceProvider trait
-   - [ ] Define InferenceRequest/Response structs
-   - [ ] Define ProviderError enum
-   - [ ] Create ProviderRegistry
-
-4. **First Provider: Cerebras**
-   - [ ] Implement CerebrasProvider
-   - [ ] Handle streaming responses
-   - [ ] Measure TTFT accurately
-   - [ ] Add integration test (requires API key)
-
-5. **Second Provider: Local (Ollama)**
-   - [ ] Implement LocalProvider
-   - [ ] Auto-detect Ollama installation
-   - [ ] List available local models
-   - [ ] Handle connection errors gracefully
+| Provider | Model ID | Available |
+|----------|----------|-----------|
+| DeepSeek | `deepseek-chat` | Yes (native) |
+| Together | `deepseek-ai/DeepSeek-V3` | Yes |
+| Fireworks | `deepseek-v3` | TBD |
 
-6. **Basic Benchmark Engine**
-   - [ ] Implement BenchmarkRunner
-   - [ ] Add warmup iterations
-   - [ ] Collect basic metrics (TTFT, throughput, latency)
-   - [ ] Run single provider benchmark
+### Kimi K2.5 (Moonshot Model)
 
-7. **Terminal Output**
-   - [ ] Implement table formatter
-   - [ ] Display results with aligned columns
-   - [ ] Show progress during benchmark
+| Provider | Model ID | Available |
+|----------|----------|-----------|
+| Moonshot | `kimi-k2.5` | Yes (native) |
+| Together | `moonshotai/kimi-k2.5` | Yes |
+| OpenRouter | `moonshotai/kimi-k2.5` | Yes |
 
-**Deliverable**: `speed-kings benchmark --providers cerebras,local` produces results
+---
 
-### Phase 2: Full Provider Support
-
-**Goal**: Support all major cloud providers
+## Benchmark Phases
 
-**Tasks**:
-
-1. **Provider: Groq**
-   - [ ] Implement GroqProvider
-   - [ ] Handle rate limiting (free tier)
-   - [ ] Test with llama3-70b model
-
-2. **Provider: SambaNova**
-   - [ ] Implement SambaNovaProvider
-   - [ ] Handle enterprise API format
-   - [ ] Add pricing data
-
-3. **Provider: Fireworks**
-   - [ ] Implement FireworksProvider
-   - [ ] Handle serverless model loading
-   - [ ] Test with llama-v3p1-70b
-
-4. **Provider: DeepSeek**
-   - [ ] Implement DeepSeekProvider
-   - [ ] Handle DeepSeek API format
-   - [ ] Add pricing data
-
-5. **Provider: OpenAI-Compatible**
-   - [ ] Implement generic OpenAICompatibleProvider
-   - [ ] Allow custom endpoint URL
-   - [ ] Support local OpenAI-compatible servers
-
-6. **Pricing System**
-   - [ ] Create pricing.json data file
-   - [ ] Implement pricing lookup
-   - [ ] Calculate cost per benchmark run
-   - [ ] Add pricing subcommand
-
-7. **Provider Discovery**
-   - [ ] Improve list command output
-   - [ ] Show availability status
-   - [ ] Display required environment variables
-
-**Deliverable**: All 6+ providers working with pricing
-
-### Phase 3: Advanced Features
-
-**Goal**: Production-ready benchmarking
-
-**Tasks**:
-
-1. **Test Prompts**
-   - [ ] Define short/medium/long prompts
-   - [ ] Add --size CLI flag
-   - [ ] Validate consistent output length
-   - [ ] Document prompt methodology
-
-2. **Metrics Enhancement**
-   - [ ] Add P50/P95 latency percentiles
-   - [ ] Calculate standard deviation
-   - [ ] Track input/output token counts
-   - [ ] Compute tokens per dollar
-
-3. **Retry Logic**
-   - [ ] Add exponential backoff
-   - [ ] Configure max retries
-   - [ ] Handle transient failures
-   - [ ] Rate limit detection
-
-4. **Timeout Handling**
-   - [ ] Configurable timeout per request
-   - [ ] Graceful timeout recovery
-   - [ ] Partial results on timeout
-
-5. **Progress Indication**
-   - [ ] Add progress bar during benchmark
-   - [ ] Show real-time results as they complete
-   - [ ] Estimate time remaining
-
-**Deliverable**: Robust benchmarking with reliable metrics
-
-### Phase 4: Output and Polish
-
-**Goal**: Professional output formats and documentation
-
-**Tasks**:
-
-1. **JSON Output**
-   - [ ] Implement JSON formatter
-   - [ ] Include full metadata
-   - [ ] Add --output json flag
-   - [ ] Document JSON schema
-
-2. **Markdown Output**
-   - [ ] Implement Markdown formatter
-   - [ ] Create documentation-ready tables
-   - [ ] Add timestamp and version info
-
-3. **CSV Output**
-   - [ ] Implement CSV formatter
-   - [ ] Header row with column names
-   - [ ] Compatible with spreadsheets
-
-4. **README Documentation**
-   - [ ] Write comprehensive README
-   - [ ] Add installation instructions
-   - [ ] Include usage examples
-   - [ ] Document all CLI options
-
-5. **Release Preparation**
-   - [ ] Create release binaries
-   - [ ] Write CHANGELOG
-   - [ ] Tag version 0.1.0
-   - [ ] Publish to crates.io (optional)
-
-**Deliverable**: Release-ready v0.1.0
-
-## Task Dependencies
-
-```
-Phase 1:
-  Project Setup
-      |
-      v
-  CLI Framework --> Provider Trait
-      |                 |
-      v                 v
-  First Provider --> Benchmark Engine --> Terminal Output
-      |
-      v
-  Second Provider
-
-Phase 2:
-  Phase 1 Complete
-      |
-      v
-  Additional Providers (parallel)
-      |
-      v
-  Pricing System --> Provider Discovery
-
-Phase 3:
-  Phase 2 Complete
-      |
-      v
-  Test Prompts --> Metrics Enhancement
-                        |
-                        v
-                  Retry Logic --> Timeout Handling
-                                      |
-                                      v
-                                Progress Indication
-
-Phase 4:
-  Phase 3 Complete
-      |
-      v
-  Output Formats (parallel: JSON, Markdown, CSV)
-      |
-      v
-  Documentation --> Release
-```
-
-## Environment Variables
-
-| Variable | Provider | Required |
-|----------|----------|----------|
-| `CEREBRAS_API_KEY` | Cerebras | For cloud |
-| `GROQ_API_KEY` | Groq | For cloud |
-| `SAMBANOVA_API_KEY` | SambaNova | For cloud |
-| `FIREWORKS_API_KEY` | Fireworks | For cloud |
-| `DEEPSEEK_API_KEY` | DeepSeek | For cloud |
-| `OLLAMA_URL` | Local | No (default: localhost:11434) |
-
-## API Endpoints
-
-| Provider | Endpoint | Auth |
-|----------|----------|------|
-| Cerebras | `https://api.cerebras.ai/v1/chat/completions` | Bearer token |
-| Groq | `https://api.groq.com/openai/v1/chat/completions` | Bearer token |
-| SambaNova | `https://api.sambanova.ai/v1/chat/completions` | Bearer token |
-| Fireworks | `https://api.fireworks.ai/inference/v1/chat/completions` | Bearer token |
-| DeepSeek | `https://api.deepseek.com/chat/completions` | Bearer token |
-| Ollama | `http://localhost:11434/api/generate` | None |
-
-## Dependencies
-
-```toml
-[package]
-name = "speed-kings"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-# CLI
-clap = { version = "4", features = ["derive"] }
-
-# Async runtime
-tokio = { version = "1", features = ["full"] }
-
-# HTTP client
-reqwest = { version = "0.12", features = ["json", "stream"] }
-
-# Serialization
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-
-# Async traits
-async-trait = "0.1"
-
-# Error handling
-thiserror = "2"
-anyhow = "1"
-
-# Output formatting
-comfy-table = "7"
-
-# Time handling
-chrono = { version = "0.4", features = ["serde"] }
-
-# Progress indication
-indicatif = "0.17"
-
-# Logging
-tracing = "0.1"
-tracing-subscriber = "0.3"
-
-[dev-dependencies]
-tokio-test = "0.4"
-tempfile = "3"
-```
-
-## Testing Strategy
-
-### Unit Tests
-
-- Metrics calculations
-- Pricing calculations
-- Output formatting
-- CLI argument parsing
-
-### Integration Tests
-
-- Mock provider benchmark flow
-- Output format verification
-- Error handling paths
-
-### Manual Testing
+### Group A: Small Model Infrastructure Comparison (Llama 3.1 8B)
+
+These phases establish baseline infrastructure differences using a small, fast model.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **A1** | Cerebras | Groq | llama3.1-8b | WSE vs LPU (specialized chips) |
+| **A2** | Cerebras | Fireworks | llama3.1-8b | WSE vs NVIDIA GPU cloud |
+| **A3** | Cerebras | Together | llama3.1-8b | WSE vs NVIDIA GPU cloud |
+| **A4** | Groq | Fireworks | llama3.1-8b | LPU vs NVIDIA GPU cloud |
+| **A5** | Groq | Together | llama3.1-8b | LPU vs NVIDIA GPU cloud |
+| **A6** | Fireworks | Together | llama3.1-8b | GPU cloud vs GPU cloud |
+| **A7** | Local M3 | Cerebras | llama3.1-8b | Apple Silicon vs WSE |
+| **A8** | Local M3 | Groq | llama3.1-8b | Apple Silicon vs LPU |
+
+**Key Questions:**
+- How much faster is WSE vs LPU?
+- How much faster is specialized hardware vs NVIDIA GPUs?
+- What's the local vs cloud speed gap?
+
+---
+
+### Group B: Large Model Scaling (Llama 3.1/3.3 70B)
+
+These phases test if infrastructure advantages scale with model size.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **B1** | Cerebras | Groq | llama-3.3-70b | WSE vs LPU at scale |
+| **B2** | Cerebras | SambaNova | llama3.1-70b | WSE vs RDU |
+| **B3** | Groq | SambaNova | llama3.1-70b | LPU vs RDU |
+| **B4** | Cerebras | Fireworks | llama3.1-70b | WSE vs GPU at scale |
+| **B5** | Cerebras | Together | llama3.1-70b | WSE vs GPU at scale |
+| **B6** | SambaNova | Fireworks | llama3.1-70b | RDU vs GPU |
+
+**Key Questions:**
+- Does WSE advantage grow or shrink at 70B?
+- How does SambaNova RDU compare?
+- Is the GPU gap larger at scale?
+
+---
+
+### Group C: GLM-4.7 Comparison (Z.ai Model)
+
+These phases compare infrastructure using Z.ai's native model.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **C1** | Cerebras | Z.ai | glm-4.7 | WSE vs Z.ai native |
+| **C2** | Z.ai | Fireworks | glm-4.7 | Native vs GPU cloud |
+
+**Key Questions:**
+- Does Cerebras maintain speed advantage on non-Llama models?
+- How fast is Z.ai's native infrastructure?
+
+---
+
+### Group D: DeepSeek-V3 Comparison
+
+These phases compare DeepSeek's native API vs third-party hosting.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **D1** | DeepSeek | Together | deepseek-v3 | Native vs GPU cloud |
+| **D2** | DeepSeek | Fireworks | deepseek-v3 | Native vs GPU cloud |
+| **D3** | Together | Fireworks | deepseek-v3 | GPU vs GPU (same model) |
+
+**Key Questions:**
+- Is DeepSeek's native API faster?
+- What's the cost/speed tradeoff?
+
+---
+
+### Group E: Kimi K2.5 Comparison (Moonshot Model)
+
+These phases compare Moonshot's native API vs aggregators.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **E1** | Moonshot | Together | kimi-k2.5 | Native vs GPU cloud |
+| **E2** | Moonshot | OpenRouter | kimi-k2.5 | Native vs aggregator |
+| **E3** | Together | OpenRouter | kimi-k2.5 | GPU vs aggregator |
+
+**Key Questions:**
+- Aggregator overhead (OpenRouter)?
+- Native API advantage?
+
+---
+
+### Group F: Local Hardware Comparison
+
+These phases compare local hardware options.
+
+| Phase | Provider 1 | Provider 2 | Model | Hardware Comparison |
+|-------|------------|------------|-------|---------------------|
+| **F1** | Local M3 Pro | Local RTX 5060 | llama3.1-8b | Apple vs NVIDIA local |
+| **F2** | Local RTX 5060 | Fireworks | llama3.1-8b | Local NVIDIA vs cloud NVIDIA |
+
+**Key Questions:**
+- Apple Silicon vs consumer NVIDIA?
+- Local GPU vs cloud GPU cost/speed tradeoff?
+
+---
+
+## Recommended Execution Order
+
+### Priority 1: Establish Baseline (Low Cost)
+
+1. **A1**: Cerebras vs Groq (llama3.1-8b) - Compare specialized chips
+2. **A2**: Cerebras vs Fireworks (llama3.1-8b) - WSE vs GPU baseline
+3. **A7**: Local M3 vs Cerebras (llama3.1-8b) - Local vs cloud baseline
+
+### Priority 2: Validate at Scale
+
+4. **B1**: Cerebras vs Groq (llama-3.3-70b) - Scale comparison
+5. **B2**: Cerebras vs SambaNova (llama3.1-70b) - Add RDU data point
+
+### Priority 3: Model-Specific Comparisons
+
+6. **C1**: Cerebras vs Z.ai (glm-4.7) - Non-Llama model
+7. **D1**: DeepSeek vs Together (deepseek-v3) - Native vs hosted
+8. **E1**: Moonshot vs Together (kimi-k2.5) - Native vs hosted
+
+### Priority 4: Fill in the Matrix
+
+9. **A4**, **A5**, **A6**: Complete GPU cloud comparisons
+10. **B3**, **B4**, **B5**, **B6**: Complete 70B comparisons
+11. **E2**, **E3**, **D2**, **D3**: Complete aggregator comparisons
+
+### Priority 5: Local Hardware
+
+12. **F1**, **F2**: Local hardware comparisons (if RTX 5060 available)
+
+---
+
+## Environment Variables Reference
 
 ```bash
-# Test with local Ollama
-ollama serve &
-speed-kings benchmark --providers local
+# Specialized AI chips
+export CEREBRAS_API_KEY="..."
+export GROQ_API_KEY="..."
+export SAMBANOVA_API_KEY="..."
 
-# Test with single cloud provider
-export CEREBRAS_API_KEY=...
-speed-kings benchmark --providers cerebras
+# NVIDIA GPU clouds
+export FIREWORKS_API_KEY="..."
+export TOGETHER_API_KEY="..."
 
-# Full benchmark
-export GROQ_API_KEY=...
-export FIREWORKS_API_KEY=...
-speed-kings benchmark --providers all
+# Chinese AI providers
+export DEEPSEEK_API_KEY="..."
+export ZAI_API_KEY="..."
+export MOONSHOT_API_KEY="..."
+
+# Aggregators
+export OPENROUTER_API_KEY="..."
+
+# Model overrides (optional)
+export TOGETHER_MODEL="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+export ZAI_MODEL="glm-4.7"
+export MOONSHOT_MODEL="kimi-k2.5"
+export OPENROUTER_MODEL="meta-llama/llama-3.1-8b-instruct"
+
+# Local
+export OLLAMA_URL="http://localhost:11434"
 ```
+
+---
+
+## Expected Patterns to Discover
+
+After running multiple 2-way comparisons, we expect to find:
+
+1. **Chip Technology Rankings**: WSE > LPU > RDU > GPU (for throughput)
+2. **Scale Effects**: Specialized hardware advantage grows with model size
+3. **Native vs Hosted**: Native APIs may be faster for their own models
+4. **Aggregator Overhead**: OpenRouter adds latency vs direct APIs
+5. **Local vs Cloud**: Cloud is 10-50x faster, but local is free
+
+---
+
+## Cost Estimation
+
+| Phase Group | Phases | Est. Cost per Phase | Total |
+|-------------|--------|---------------------|-------|
+| Group A (8B) | 8 | ~$0.05 | ~$0.40 |
+| Group B (70B) | 6 | ~$0.15 | ~$0.90 |
+| Group C (GLM) | 2 | ~$0.10 | ~$0.20 |
+| Group D (DeepSeek) | 3 | ~$0.05 | ~$0.15 |
+| Group E (Kimi) | 3 | ~$0.10 | ~$0.30 |
+| Group F (Local) | 2 | $0.00 | $0.00 |
+| **Total** | **24** | | **~$1.95** |
+
+*Note: Costs are estimates. Use `--size short` and `--iterations 1` to minimize.*
+
+---
+
+## CLI Usage Examples
+
+```bash
+# Phase A1: Cerebras vs Groq (8B)
+speed-kings benchmark --providers cerebras,groq -s short -i 1 --yes
+
+# Phase B1: Cerebras vs Groq (70B) - need model override
+CEREBRAS_MODEL=llama-3.3-70b GROQ_MODEL=llama-3.3-70b-versatile \
+  speed-kings benchmark --providers cerebras,groq -s short -i 1 --yes
+
+# Phase C1: Cerebras vs Z.ai (GLM-4.7)
+CEREBRAS_MODEL=zai-glm-4.7 ZAI_MODEL=glm-4.7 \
+  speed-kings benchmark --providers cerebras,zai -s short -i 1 --yes
+
+# Output as JSON for analysis
+speed-kings benchmark --providers cerebras,groq -o json > results/a1.json
+```
+
+---
 
 ## Success Criteria
 
-### Phase 1 Complete When:
+Each phase is complete when:
+- [ ] Both providers return valid results
+- [ ] Metrics are comparable (same prompt, similar output)
+- [ ] Results saved in `results/` directory
+- [ ] Observations documented in `docs/findings.md`
 
-- [ ] `speed-kings benchmark --providers cerebras` returns results
-- [ ] `speed-kings benchmark --providers local` returns results
-- [ ] Terminal table displays correctly
-- [ ] All unit tests pass
-- [ ] CI/CD pipeline green
-
-### Phase 2 Complete When:
-
-- [ ] All 6+ providers implemented
-- [ ] Pricing data accurate for all providers
-- [ ] `speed-kings list` shows all providers with status
-- [ ] `speed-kings pricing` displays cost information
-
-### Phase 3 Complete When:
-
-- [ ] Three test prompt sizes available
-- [ ] P50/P95 metrics calculated
-- [ ] Retry logic handles transient failures
-- [ ] Progress bar shows during benchmark
-
-### Phase 4 Complete When:
-
-- [ ] JSON/Markdown/CSV output working
-- [ ] README complete with examples
-- [ ] CHANGELOG written
-- [ ] v0.1.0 tagged and released
-
-## Notes
-
-1. **Start simple**: Get one provider working end-to-end before adding more
-2. **Test locally first**: Use Ollama for development to avoid API costs
-3. **Measure accurately**: Warmup runs and multiple iterations are essential
-4. **Document as you go**: Update these docs as implementation proceeds
-5. **Follow TDD**: Write tests before implementation where practical
+Overall success:
+- [ ] 10+ phases completed
+- [ ] Clear pattern emerges for infrastructure rankings
+- [ ] Data supports video series narrative
